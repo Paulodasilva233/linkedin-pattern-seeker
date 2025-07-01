@@ -33,13 +33,31 @@ npm install
 npm run dev
 ```
 
-### 2. Build para Extensão Chrome
+### 2. Instalação Automática da Extensão
+
+**Opção A - Instalador Automático (Recomendado):**
 
 ```bash
-# Gere o build de produção
-npm run build
+# Linux/Mac
+chmod +x install.sh
+./install.sh
 
-# A pasta 'dist' conterá todos os arquivos da extensão
+# Windows
+install.bat
+```
+
+**Opção B - Manual:**
+
+```bash
+# Instale dependências e compile a extensão
+npm run install:extension
+
+# Ou separadamente:
+npm install
+npm run build:extension
+
+# Para criar arquivo zip (opcional)
+npm run pack:extension
 ```
 
 ### 3. Instalar Extensão no Chrome
