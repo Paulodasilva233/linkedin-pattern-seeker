@@ -1,20 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Search, User, ArrowDown } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { ChromeResponse } from "@/types/chrome";
 
 const Index = () => {
+  const [isExtension, setIsExtension] = useState(false);
+  const [isLinkedInTab, setIsLinkedInTab] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [patterns, setPatterns] = useState({ pattern1: "", pattern2: "" });
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentTab, setCurrentTab] = useState(null);
   const { toast } = useToast();
+
+  // Verifica se está executando como extensão do Chrome
+  useEffect(() => {
+    const checkExtensionEnvironment = async () => {
+      try {
+        const chromeGlobal = (window as any).chrome;
+        if (typeof chromeGlobal !== 'undefined' && chromeGlobal.runtime && chromeGlobal.runtime.id) {
+          setIsExtension(true);
+          await checkLinkedInStatus();
+        }
+      } catch (error) {
+        console.log('Não está executando como extensão:', error);
+        setIsExtension(false);
+      }
+    };
+
+    checkExtensionEnvironment();
+  }, []);
+
+  // Verifica status do LinkedIn
+  const checkLinkedInStatus = async () => {
+    if (!isExtension) return;
+
+    try {
+      const chromeGlobal = (window as any).chrome;
+      const response = await new Promise<ChromeResponse>((resolve) => {
+        chromeGlobal.runtime.sendMessage({ action: 'checkStatus' }, resolve);
+      });
+
+      if (response.success) {
+        setIsLinkedInTab(response.isLinkedIn || false);
+        setIsLoggedIn(response.isLoggedIn || false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível verificar o status do LinkedIn",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleLogin = async () => {
     // Simulação de login - em implementação real, usaria OAuth do LinkedIn
@@ -35,45 +80,55 @@ const Index = () => {
       return;
     }
 
+    if (!isExtension) {
+      toast({
+        title: "Modo demonstração",
+        description: "Para funcionalidade completa, use como extensão do Chrome",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isLinkedInTab) {
+      toast({
+        title: "Acesse o LinkedIn",
+        description: "Abra o LinkedIn em uma aba para realizar a busca",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSearching(true);
     
-    // Simulação de busca - em implementação real, faria requisições para API/proxy
-    setTimeout(() => {
-      const mockResults = [
-        {
-          id: 1,
-          author: "João Silva",
-          content: `Exemplo de post contendo ${patterns.pattern1}. Este é um resultado simulado para demonstração.`,
-          timestamp: "2024-07-01T10:00:00Z",
-          matchedPattern: "pattern1",
-          engagement: { likes: 45, comments: 12, shares: 8 }
-        },
-        {
-          id: 2,
-          author: "Maria Santos",
-          content: `Post interessante sobre ${patterns.pattern2} e suas implicações no mercado atual.`,
-          timestamp: "2024-06-30T15:30:00Z",
-          matchedPattern: "pattern2",
-          engagement: { likes: 78, comments: 23, shares: 15 }
-        },
-        {
-          id: 3,
-          author: "Pedro Costa",
-          content: `Análise detalhada sobre ${patterns.pattern1} versus ${patterns.pattern2} no contexto empresarial.`,
-          timestamp: "2024-06-29T09:15:00Z",
-          matchedPattern: "both",
-          engagement: { likes: 156, comments: 67, shares: 34 }
-        }
-      ];
-      
-      setSearchResults(mockResults);
-      setIsSearching(false);
-      
-      toast({
-        title: "Busca concluída",
-        description: `Encontrados ${mockResults.length} posts na última semana`,
+    try {
+      const chromeGlobal = (window as any).chrome;
+      const response = await new Promise<ChromeResponse>((resolve) => {
+        chromeGlobal.runtime.sendMessage({ 
+          action: 'searchPatterns',
+          pattern1: patterns.pattern1,
+          pattern2: patterns.pattern2
+        }, resolve);
       });
-    }, 2000);
+
+      if (response.success && response.results) {
+        setSearchResults(response.results);
+        toast({
+          title: "Busca concluída",
+          description: `Encontrados ${response.results.length} posts de ${response.totalAnalyzed} analisados`,
+        });
+      } else {
+        throw new Error(response.error || "Erro na busca");
+      }
+    } catch (error) {
+      console.error('Erro na busca:', error);
+      toast({
+        title: "Erro na busca",
+        description: "Não foi possível extrair posts do LinkedIn",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -87,11 +142,35 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Alerta sobre limitações */}
+        {/* Status da Extensão */}
         <Alert>
           <AlertDescription>
-            <strong>Importante:</strong> Esta é uma demonstração da interface. Para funcionamento completo, 
-            seria necessário implementar proxy/backend para contornar limitações de CORS e usar a API oficial do LinkedIn.
+            {isExtension ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="default">Extensão Ativa</Badge>
+                  <span>Executando como extensão do Chrome</span>
+                </div>
+                {isLinkedInTab ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">LinkedIn Detectado</Badge>
+                    <span className="text-sm">
+                      {isLoggedIn ? 'Usuário logado detectado' : 'Faça login no LinkedIn para usar'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Acesse linkedin.com em uma aba para fazer a análise
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <strong>Modo Demonstração:</strong> Para funcionalidade completa, instale como extensão do Chrome.
+                <br />
+                <span className="text-sm">1. Execute `npm run build` 2. Carregue a pasta `dist` no Chrome em chrome://extensions/</span>
+              </div>
+            )}
           </AlertDescription>
         </Alert>
 

@@ -1,73 +1,154 @@
-# Welcome to your Lovable project
+# LinkedIn Pattern Seeker - Extensão Chrome
 
-## Project info
+Uma aplicação React que funciona como extensão do Chrome para análise de padrões em posts do LinkedIn com webscraping direto da página.
 
-**URL**: https://lovable.dev/projects/88d0676f-4433-4914-8324-e4a432192bd1
+## 🚀 Funcionalidades
 
-## How can I edit this code?
+- **Webscraping em tempo real** do LinkedIn sem usar API oficial
+- **Análise de padrões** em posts dos últimos 7 dias
+- **Interface React moderna** com Tailwind CSS e Shadcn UI
+- **Execução local** no navegador através de extensão
+- **Detecção automática** de login do LinkedIn
+- **Extração de métricas** de engajamento (curtidas, comentários, compartilhamentos)
 
-There are several ways of editing your application.
+## 📋 Pré-requisitos
 
-**Use Lovable**
+- Node.js 18+ 
+- Google Chrome
+- Conta ativa no LinkedIn
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/88d0676f-4433-4914-8324-e4a432192bd1) and start prompting.
+## 🛠️ Instalação e Uso
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Desenvolvimento Local
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone o repositório
 git clone <YOUR_GIT_URL>
+cd linkedin-pattern-seeker
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Instale dependências
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Execute em modo desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 2. Build para Extensão Chrome
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Gere o build de produção
+npm run build
 
-**Use GitHub Codespaces**
+# A pasta 'dist' conterá todos os arquivos da extensão
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 3. Instalar Extensão no Chrome
 
-## What technologies are used for this project?
+1. Abra Chrome e navegue para `chrome://extensions/`
+2. Ative o "Modo do desenvolvedor" no canto superior direito
+3. Clique em "Carregar sem compactação"
+4. Selecione a pasta `dist` gerada pelo build
+5. A extensão "LinkedIn Pattern Seeker" aparecerá na lista
 
-This project is built with:
+### 4. Usar a Extensão
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Acesse o LinkedIn**: Vá para `https://www.linkedin.com/feed/`
+2. **Faça login**: Certifique-se de estar logado na sua conta
+3. **Abra a extensão**: Clique no ícone da extensão na barra de ferramentas
+4. **Configure padrões**: Defina os dois padrões que deseja buscar
+5. **Execute análise**: Clique em "Buscar Padrões" para extrair posts
 
-## How can I deploy this project?
+## 🔧 Arquitetura Técnica
 
+### Estrutura da Extensão
+
+```
+├── public/
+│   ├── manifest.json          # Configuração da extensão Chrome
+│   ├── content-script.js      # Script que executa nas páginas LinkedIn
+│   └── background.js          # Service Worker da extensão
+├── src/
+│   ├── pages/Index.tsx        # Interface principal React
+│   ├── types/chrome.d.ts      # Declarações TypeScript para Chrome API
+│   └── components/            # Componentes UI Shadcn
+```
+
+### Como Funciona
+
+1. **Content Script** (`content-script.js`):
+   - Executa diretamente nas páginas do LinkedIn
+   - Extrai posts usando seletores DOM
+   - Filtra por janela temporal de 7 dias
+   - Busca padrões no conteúdo dos posts
+
+2. **Background Script** (`background.js`):
+   - Gerencia comunicação entre popup e content script
+   - Controla permissões e estado da extensão
+
+3. **Interface React** (`Index.tsx`):
+   - Popup da extensão com interface moderna
+   - Configuração de padrões de busca
+   - Exibição de resultados com métricas
+
+### Funcionalidades de Webscraping
+
+- **Extração de Posts**: Busca elementos DOM com `[data-urn*="urn:li:activity"]`
+- **Filtro Temporal**: Analisa apenas posts dos últimos 7 dias
+- **Detecção de Padrões**: Busca texto usando métodos de string JavaScript
+- **Métricas de Engajamento**: Extrai curtidas, comentários e compartilhamentos
+
+## ⚠️ Considerações Importantes
+
+### Limitações Técnicas
+- **Dependente da estrutura DOM**: Pode quebrar se LinkedIn alterar a estrutura
+- **Rate Limiting**: LinkedIn pode detectar automação excessiva
+- **Scroll Infinito**: Pode ser necessário rolar para carregar mais posts
+
+### Conformidade e Ética
+- **Termos de Serviço**: Verifique compliance com ToS do LinkedIn
+- **Uso Responsável**: Evite sobrecarga dos servidores LinkedIn
+- **Dados Pessoais**: Respeite privacidade dos usuários
+
+### Melhorias Futuras
+- Cache local de posts para análise offline
+- Exportação de dados para CSV/JSON
+- Análise avançada com processamento de linguagem natural
+- Dashboard com visualizações e gráficos
+
+## 🐛 Troubleshooting
+
+### Extensão não carrega
+- Verifique se o build foi executado corretamente
+- Confirme que todos os arquivos estão na pasta `dist`
+- Recarregue a extensão em `chrome://extensions/`
+
+### Não detecta posts
+- Certifique-se de estar na página do feed LinkedIn
+- Aguarde carregar completamente antes de executar
+- Tente rolar a página para carregar mais posts
+
+### Erro de permissões
+- Verifique se a extensão tem permissão para acessar LinkedIn
+- Recarregue a página do LinkedIn após instalar extensão
+
+## 📄 Tecnologias Utilizadas
+
+- **React 18** - Interface de usuário
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **Shadcn UI** - Componentes de interface
+- **Chrome Extension API** - Integração com navegador
+- **Vite** - Build tool
+
+## 📄 Licença
+
+Este projeto é fornecido como exemplo educacional. Use responsavelmente e em conformidade com os termos de serviço do LinkedIn.
+
+---
+
+## Project info (Lovable)
+
+**URL**: https://lovable.dev/projects/88d0676f-4433-4914-8324-e4a432192bd1
+
+### Deploy
 Simply open [Lovable](https://lovable.dev/projects/88d0676f-4433-4914-8324-e4a432192bd1) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

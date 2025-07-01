@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn Pattern Seeker",
+  "version": "1.0.0",
+  "description": "Analisa padrões em posts do LinkedIn com janela temporal de 7 dias",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "LinkedIn Pattern Seeker",
+    "default_icon": {
+      "16": "favicon.ico",
+      "32": "favicon.ico",
+      "48": "favicon.ico",
+      "128": "favicon.ico"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected-script.js"],
+      "matches": ["https://www.linkedin.com/*"]
+    }
+  ]
+}
