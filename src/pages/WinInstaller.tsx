@@ -43,10 +43,60 @@ const WinInstaller = () => {
   };
 
   const downloadPackage = () => {
-    // Simular download
+    // Criar arquivo ZIP com instalador Windows
+    const installerContent = `@echo off
+cls
+color 0A
+
+echo.
+echo 🪟 LinkedIn Pattern Seeker - Instalador Windows
+echo ================================================
+echo.
+echo 📋 Este instalador vai:
+echo    - Verificar se tem Node.js (instalar se precisar)
+echo    - Compilar a extensao automaticamente
+echo    - Abrir Chrome para voce carregar a extensao
+echo.
+pause
+
+REM Verificar Node.js e instalar se necessario
+echo 🔍 Verificando Node.js...
+node --version >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Node.js nao encontrado!
+    echo 📥 Baixando Node.js automaticamente...
+    start https://nodejs.org/dist/v18.19.0/node-v18.19.0-x64.msi
+    echo ⏳ Instale o Node.js e execute este arquivo novamente
+    pause
+    exit /b 1
+)
+
+echo ✅ Node.js encontrado!
+
+REM Instalar dependencias se necessario
+if not exist "node_modules" (
+    echo 📦 Instalando dependencias...
+    npm install
+)
+
+REM Compilar extensao
+echo 🔨 Compilando extensao...
+npm run build
+
+REM Copiar arquivos da extensao
+echo 📁 Copiando arquivos da extensao...
+copy "public\\manifest.json" "dist\\"
+copy "public\\background.js" "dist\\"
+copy "public\\content-script.js" "dist\\"
+copy "public\\favicon.ico" "dist\\"
+
+echo 🎉 Instalacao concluida!
+echo 📋 Agora va para chrome://extensions/ e carregue a pasta 'dist'
+pause`;
+
     const element = document.createElement('a');
-    element.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent('LinkedIn Pattern Seeker Windows Package');
-    element.download = 'linkedin-pattern-seeker-windows.zip';
+    element.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(installerContent);
+    element.download = 'instalar-linkedin-extension.bat';
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
