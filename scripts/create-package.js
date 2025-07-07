@@ -6,15 +6,14 @@ const { execSync } = require('child_process');
 
 console.log('📦 Criando pacote completo para distribuição...\n');
 
-// 1. Verificar se dist existe e executar build se necessário
-if (!fs.existsSync('dist')) {
-  console.log('🔨 Executando build da extensão...');
-  try {
-    execSync('node scripts/build-extension.js', { stdio: 'inherit' });
-  } catch (error) {
-    console.error('❌ Erro no build:', error.message);
-    process.exit(1);
-  }
+// 1. Executar build da extensão sempre
+console.log('🔨 Executando build da extensão...');
+try {
+  execSync('npm run build', { stdio: 'inherit' });
+  console.log('✅ Build React concluído!');
+} catch (error) {
+  console.error('❌ Erro no build React:', error.message);
+  process.exit(1);
 }
 
 // 2. Criar pasta de distribuição
